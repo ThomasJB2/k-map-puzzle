@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="widtd=device-widtd, initial-scale=1.0" />
+    <title>Karnaugh Map Puzzle Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html {
+        font-family: "Poppins", sans-serif;
+      }
+      body {
+        background-color: #fffafb;
+      }
+      .headings {
+        font-weight: 600;
+        font-size: 3vmax;
+        text-align: center;
+        padding: 2vmax;
+        color: #3d3522;
+      }
+      #table {
+        display: table;
+        border: none;
+        border: 1px solid #fffafb;
+        border-radius: 15px;
+        overflow: hidden;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .row {
+        display: table-row;
+      }
+      .row:first-child .cell:first-child {
+        border-top-left-radius: 15px; /* Apply rounded corner to top-left */
+      }
+      .row:first-child .cell:last-child {
+        border-top-right-radius: 15px; /* Apply rounded corner to top-right */
+      }
+
+      /* Fix bottom-left and bottom-right cell borders */
+      .row:last-child .cell:first-child {
+        border-bottom-left-radius: 15px; /* Apply rounded corner to bottom-left */
+      }
+      .row:last-child .cell:last-child {
+        border-bottom-right-radius: 15px; /* Apply rounded corner to bottom-right */
+      }
+      .cell {
+        font-size: 2.75vmax;
+        border: 1px solid #fffafb;
+        display: table-cell;
+        padding: 10px;
+        width: 5vmax;
+        height: 5vmax;
+        text-align: center;
+        vertical-align: middle;
+        text-decoration: none;
+      }
+      .empty {
+        background-color: #4a442d;
+      }
+      .var_label {
+        color: #fffafb;
+        background-color: #386150;
+      }
+      .var_num {
+        color: #fffafb;
+        background-color: #58b09c;
+      }
+
+      .ones {
+        background-color: #caf7e2;
+        color: #386150;
+        border-color: #fffafb;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="headings">
+      Welcome to the K-Map Puzzle Game! <br /><br />4 Variable:
+    </h1>
+    <p style="font-size: 2vmax; color: black; text-align: center">
+      A {{ andChar}} B {{ orChar }} B
+    </p>
+    <div id="table" id="reservation_table">
+      <div class="row">
+        <div class="cell empty"></div>
+        <div class="cell var_label">AB</div>
+        <div class="cell var_label">AB</div>
+        <div class="cell var_label">AB</div>
+        <div class="cell var_label">AB</div>
+        <div class="cell var_label">AB</div>
+      </div>
+      <div class="row">
+        <div class="cell var_label">CD</div>
+        <div class="cell empty"></div>
+        <div class="cell var_num">00</div>
+        <div class="cell var_num">01</div>
+        <div class="cell var_num">11</div>
+        <div class="cell var_num">10</div>
+      </div>
+      <div class="row">
+        <div class="cell var_label">CD</div>
+        <div class="cell var_num">00</div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+      </div>
+      <div class="row">
+        <div class="cell var_label">CD</div>
+        <div class="cell var_num">01</div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+      </div>
+      <div class="row">
+        <div class="cell var_label">CD</div>
+        <div class="cell var_num">11</div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+      </div>
+      <div class="row">
+        <div class="cell var_label">CD</div>
+        <div class="cell var_num">10</div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+        <div class="cell ones"></div>
+      </div>
+    </div>
+    <button
+      onclick="submitData()"
+      style="margin-left: auto; margin-right: auto"
+    >
+      Submit
+    </button>
+    <script>
+      const addOne = document.querySelectorAll(".ones");
+      addOne.forEach((one) => {
+        one.addEventListener("click", function () {
+          this.textContent = "1";
+        });
+      });
+      const removeOne = document.querySelectorAll(".ones");
+      removeOne.forEach((rOne) => {
+        rOne.addEventListener("contextmenu", function (event) {
+          event.preventDefault();
+          this.textContent = "";
+        });
+      });
+      function submitData() {
+        // Get all rows in the table
+        const rows = document.querySelectorAll("#table .row");
+        let tableData = [];
+
+        rows.forEach((row) => {
+          let rowData = [];
+          row.querySelectorAll(".cell").forEach((cell) => {
+            rowData.push(cell.innerText.trim());
+          });
+          tableData.push(rowData);
+        });
+
+        // Send data to Flask server
+        fetch("/submit_table", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ data: tableData }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            alert("Data submitted successfully: " + JSON.stringify(data));
+          });
+      }
+      // Import the random module equivalent
+      const random = {
+        choice: (arr) => arr[Math.floor(Math.random() * arr.length)],
+        randint: (min, max) =>
+          Math.floor(Math.random() * (max - min + 1)) + min,
+      };
+
+      const o = " or ";
+      const yesOrNo = ["", "not "];
+
+      const grid = [
+        [
+          [false, false, false, false],
+          [false, true, false, false],
+          [true, true, false, false],
+          [true, false, false, false],
+        ],
+        [
+          [false, false, false, true],
+          [false, true, false, true],
+          [true, true, false, true],
+          [true, false, false, true],
+        ],
+        [
+          [false, false, true, true],
+          [false, true, true, true],
+          [true, true, true, true],
+          [true, false, true, true],
+        ],
+        [
+          [false, false, true, false],
+          [false, true, true, false],
+          [true, true, true, false],
+          [true, false, true, false],
+        ],
+      ];
+
+      const createEquation = () => {
+        return (
+          random.choice(yesOrNo) +
+          "A " +
+          "and " +
+          random.choice(yesOrNo) +
+          "B " +
+          "and " +
+          random.choice(yesOrNo) +
+          "C " +
+          "and " +
+          random.choice(yesOrNo) +
+          "D"
+        );
+      };
+
+      // Function to replace letters based on boolean values in the grid
+      const replaceLetters = (grid, template) => {
+        const convert = (value) => (value ? 1 : null);
+
+        // Iterate through the grid
+        return grid.map((row) =>
+          row.map((cell) => {
+            const [A, B, C, D] = cell;
+            // Use eval to compute the result of the template
+            const evaluated = eval(template); // Evaluate the expression
+            return convert(evaluated);
+          })
+        );
+      };
+
+      const repe = random.randint(2, 7);
+
+      const Equation = Array.from({ length: repe }, createEquation).join(o);
+
+      const parts = Equation.split("or").map((part) => part.trim());
+      const equations = {};
+      parts.forEach((part, i) => {
+        equations[`${i + 1}`] = part;
+      });
+
+      const equGrid1 = replaceLetters(grid, equations["1"]);
+      const equGrid2 = replaceLetters(grid, equations["2"]);
+      const equGrid3 = equations["3"]
+        ? replaceLetters(grid, equations["3"])
+        : null;
+      const equGrid4 = equations["4"]
+        ? replaceLetters(grid, equations["4"])
+        : null;
+      const equGrid5 = equations["5"]
+        ? replaceLetters(grid, equations["5"])
+        : null;
+      const equGrid6 = equations["6"]
+        ? replaceLetters(grid, equations["6"])
+        : null;
+      const equGrid7 = equations["7"]
+        ? replaceLetters(grid, equations["7"])
+        : null;
+
+      const finalGrid = equGrid1.map((row, i) =>
+        row.map((_, j) => {
+          const values = [
+            equGrid1[i][j],
+            equGrid2[i][j],
+            equGrid3 ? equGrid3[i][j] : null,
+            equGrid4 ? equGrid4[i][j] : null,
+            equGrid5 ? equGrid5[i][j] : null,
+            equGrid6 ? equGrid6[i][j] : null,
+            equGrid7 ? equGrid7[i][j] : null,
+          ];
+          return values.find((x) => x !== null) || null;
+        })
+      );
+
+      console.log(Equation);
+      console.log(finalGrid);
+    </script>
+  </body>
+</html>
